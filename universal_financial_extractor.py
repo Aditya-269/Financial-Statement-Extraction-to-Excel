@@ -5,7 +5,6 @@ Works with ANY financial statement PDF - automatically detects structure
 Extracts income statements, balance sheets, cash flows with high accuracy
 """
 
-import cv2
 import numpy as np
 import pytesseract
 from pdf2image import convert_from_path
@@ -15,6 +14,7 @@ from pathlib import Path
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from typing import List, Dict, Tuple, Optional
+from PIL import ImageOps
 
 class UniversalFinancialExtractor:
     """Extract financial statements from any PDF automatically"""
@@ -208,9 +208,8 @@ class UniversalFinancialExtractor:
         
         print(f"  Processing page {page_num}...")
         
-        # Convert to OpenCV format
-        img_cv = cv2.cvtColor(np.array(page_image), cv2.COLOR_RGB2BGR)
-        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        # Convert to grayscale for better OCR
+        gray = ImageOps.grayscale(page_image)
         
         # Get OCR data with positions
         ocr_data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT, config='--psm 6')

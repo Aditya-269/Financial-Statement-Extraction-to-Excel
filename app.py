@@ -38,6 +38,45 @@ def make_columns_unique(df):
     return df
 
 
+def prepare_df_for_display(df):
+    """Prepare DataFrame for Streamlit display by ensuring Arrow compatibility"""
+    if df.empty:
+        return df
+    
+    # Make a copy to avoid modifying original
+    df = df.copy()
+    
+    # Ensure all columns have consistent types
+    for col in df.columns:
+        # Skip if all values are None/NaN
+        if df[col].isna().all():
+            continue
+            
+        # Check if column contains numeric values
+        non_null_values = df[col].dropna()
+        if len(non_null_values) == 0:
+            continue
+        
+        # Try to detect if this should be a numeric column
+        numeric_count = 0
+        for val in non_null_values:
+            if isinstance(val, (int, float)):
+                numeric_count += 1
+            elif isinstance(val, str):
+                # Check if string looks like a number
+                clean_val = val.replace(',', '').replace('(', '').replace(')', '').replace('-', '').strip()
+                if clean_val.replace('.', '').isdigit():
+                    numeric_count += 1
+        
+        # If most values are numeric, convert column to string for safe display
+        # This prevents Arrow serialization errors with mixed types
+        if numeric_count > len(non_null_values) * 0.5:
+            # Convert to string to ensure consistency
+            df[col] = df[col].apply(lambda x: '' if pd.isna(x) or x == '' or x is None else str(x))
+    
+    return df
+
+
 # Page config
 st.set_page_config(
     page_title="Financial Research Portal",
@@ -198,6 +237,7 @@ def main():
                         
                         # Handle duplicate column names for display
                         df = make_columns_unique(df)
+                        df = prepare_df_for_display(df)
                         
                         if df.empty:
                             st.error("❌ No financial data found in the PDF")
@@ -235,12 +275,13 @@ def main():
                                         )
                                     sample_df = sample_extractor.extract("output/sample_test.xlsx")
                                     
-                                    # Handle duplicate column names
+                                    # Handle duplicate column names and prepare for display
                                     sample_df = make_columns_unique(sample_df)
+                                    sample_df = prepare_df_for_display(sample_df)
                                     
                                     if not sample_df.empty:
                                         st.success("✅ Sample extraction works! Your uploaded PDF may have a different format.")
-                                        st.dataframe(sample_df, use_container_width=True)
+                                        st.dataframe(sample_df, width='stretch')
                                     else:
                                         st.error("❌ Even sample failed. Please check Tesseract installation.")
                         else:
@@ -266,7 +307,7 @@ def main():
                             
                             # Preview
                             st.markdown("### 📊 Data Preview")
-                            st.dataframe(df, use_container_width=True, height=400)
+                            st.dataframe(df, width='stretch', height=400)
                             
                             # Download button
                             with open(output_path, 'rb') as f:
