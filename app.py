@@ -2,6 +2,7 @@
 """
 Research Portal - Main Application
 Upload financial PDFs and extract to Excel automatically
+Version: 1.0.1
 """
 
 import streamlit as st

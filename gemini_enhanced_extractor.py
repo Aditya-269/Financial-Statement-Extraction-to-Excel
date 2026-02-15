@@ -1,7 +1,8 @@
-!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Gemini-Enhanced Financial Statement Extractor
 Uses Google Gemini API to post-process and improve extraction accuracy
+Version: 1.0.1
 """
 
 import os
