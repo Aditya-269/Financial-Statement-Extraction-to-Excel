@@ -129,10 +129,8 @@ def main():
         st.markdown("---")
         st.caption("Powered by Tesseract OCR & OpenCV")
     
-    # Main tabs
-    tab1, tab2, tab3 = st.tabs(["📤 Upload & Extract", "📖 Documentation", "🔍 Examples"])
-    
-    with tab1:
+    # Main content (removed tabs - single page interface)
+    with st.container():
         st.header("Upload Financial Statement PDF")
         
         col1, col2 = st.columns([2, 1])
@@ -252,7 +250,6 @@ def main():
                             time.sleep(0.5)
                             
                             # Success message
-                            st.balloons()
                             st.success("🎉 **Extraction completed successfully!**")
                             
                             # Metrics
@@ -297,19 +294,9 @@ def main():
         else:
             st.info("👆 **Please upload a PDF file to begin**")
             
-            # Show example files and test button
-            st.markdown("### 📁 Sample Files Available")
-            
-            col1, col2 = st.columns([3, 1])
-            
-            with col1:
-                if os.path.exists("Tata Motors Quarterly Financial Statements.pdf"):
-                    st.markdown("✓ `Tata Motors Quarterly Financial Statements.pdf`")
-                if os.path.exists("Financial Statements Examples.xlsx"):
-                    st.markdown("✓ `Financial Statements Examples.xlsx` (Expected output format)")
-            
-            with col2:
-                if st.button("🧪 Test Sample", help="Test with Tata Motors PDF"):
+            # Test sample button
+            if os.path.exists("Tata Motors Quarterly Financial Statements.pdf"):
+                if st.button("🧪 Test with Sample PDF", help="Test with Tata Motors PDF", use_container_width=True):
                     st.info("Running test extraction...")
                     with st.spinner("Processing..."):
                         try:
@@ -340,122 +327,8 @@ def main():
                         except Exception as e:
                             st.error(f"Error: {e}")
     
-    with tab2:
-        st.header("📖 How It Works")
-        
-        st.markdown("""
-        ## 🔄 Extraction Pipeline
-        
-        Our system uses a **3-step process** to extract financial data:
-        
-        ### Step 1: OCR Text Extraction
-        - Converts PDF pages to images (200 DPI)
-        - Uses Tesseract OCR to extract text
-        - Preserves layout and structure
-        
-        ### Step 2: Intelligent Parsing
-        - **Year Detection**: Automatically finds fiscal years (FY 25, FY 24, etc.)
-        - **Line Item Recognition**: Matches text to standard financial terms
-        - **Number Extraction**: Handles various formats:
-          - Commas: `1,234.56`
-          - Negatives: `(1,234)` or `-1,234`
-          - Missing: `—` or blank
-        
-        ### Step 3: Excel Generation
-        - Creates formatted Excel file
-        - Applies professional styling
-        - Organizes by fiscal year
-        
-        ---
-        
-        ## 🤔 Design Decisions
-        
-        ### 1. **How do we find line items?**
-        We maintain a dictionary of standard financial terms and their variations:
-        - "Revenue from ops" → "Revenue from operations"
-        - "Operating Costs" → "Operating expenses"
-        
-        ### 2. **Different line item names?**
-        Our normalization engine maps variations to standard names while keeping originals for reference.
-        
-        ### 3. **Missing line items?**
-        We leave cells **empty** rather than guessing - this allows analysts to spot gaps easily.
-        
-        ### 4. **Numeric value extraction reliability**
-        - Extract only when confidence is high
-        - Validate against expected ranges
-        - **No hallucination**: If unclear, leave blank
-        
-        ### 5. **Currency and units detection**
-        - Detect from document text (e.g., "Rs in Crores")
-        - Display prominently in metadata
-        - Default to INR Crores if uncertain
-        
-        ### 6. **Multiple years handling**
-        - Extract ALL years found (up to 6)
-        - Create separate column for each year
-        - Sort chronologically (newest first)
-        
-        ### 7. **Ambiguous data presentation**
-        - Empty cells = truly missing data
-        - `—` or `N/A` = not applicable
-        - Allows easy review and correction by analysts
-        
-        ---
-        
-        ## 📋 Supported Line Items
-        
-        | Standard Name | Variations Recognized |
-        |--------------|----------------------|
-        | Revenue from operations | revenue from ops, operating revenue, sales |
-        | Other income | other sources, non-operating income |
-        | Cost of materials consumed | raw material cost, material consumed |
-        | Employee benefits expense | employee cost, staff costs, salaries |
-        | Finance costs | interest expense, borrowing costs |
-        | Depreciation | depreciation and amortisation |
-        | Profit before tax | PBT, profit before taxation |
-        | Tax expense | income tax, current tax |
-        | Profit for the year | PAT, net profit |
-        
-        """)
-    
-    with tab3:
-        st.header("🔍 Example Output")
-        
-        st.markdown("### Sample Extraction Result")
-        
-        # Show expected format
-        sample_data = {
-            'Particulars': [
-                'Revenue from operations',
-                'Other income',
-                'Total Revenue',
-                'Cost of materials consumed',
-                'Employee benefits expense',
-                'Finance costs',
-                'Depreciation',
-                'Other expenses',
-                'Profit before tax',
-                'Tax expense',
-                'Profit for the year'
-            ],
-            'FY 25': [204813.0, 1212.0, 206025.0, 82937.43, 18850.26, 4736.0, 6295.08, 21187.0, 12070.0, 2948.0, 8556.0],
-            'FY 24': [163210.0, 793.6, 164003.6, 70264.61, 14465.87, 2784.0, 5502.85, 24184.0, 7631.0, 2120.0, 5485.0],
-            'FY 23': [133905.0, 388.49, 134293.49, 64170.92, 12166.42, 2174.0, 4792.2, None, 9454.0, None, 7673.0]
-        }
-        
-        df_sample = pd.DataFrame(sample_data)
-        st.dataframe(df_sample, use_container_width=True)
-        
-        st.markdown("""
-        ### ✨ Key Features
-        
-        1. **Organized Columns**: Each fiscal year gets its own column
-        2. **Standard Names**: All line items normalized to standard terminology
-        3. **Professional Formatting**: Numbers formatted with commas and decimals
-        4. **Missing Data**: Shown as empty cells (see FY 23 "Other expenses")
-        5. **Ready for Analysis**: Can immediately start calculations
-        """)
+
+      
         
         # Show actual extracted file if exists
         if os.path.exists("output/final_extraction.xlsx"):
@@ -476,7 +349,7 @@ def main():
     st.markdown("---")
     st.markdown(
         "<div style='text-align: center; color: #666;'>"
-        "Financial Research Portal v1.0 | Built with ❤️ using Streamlit & Tesseract OCR"
+        "Financial Statement Extractor | Built with Streamlit & Tesseract OCR"
         "</div>",
         unsafe_allow_html=True
     )
