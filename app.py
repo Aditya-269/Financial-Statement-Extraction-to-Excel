@@ -16,7 +16,14 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from universal_financial_extractor import UniversalFinancialExtractor
-from gemini_enhanced_extractor import GeminiEnhancedExtractor
+
+# Try to import Gemini extractor if available
+try:
+    from gemini_enhanced_extractor import GeminiEnhancedExtractor
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    GeminiEnhancedExtractor = None
 
 
 def make_columns_unique(df):
@@ -128,11 +135,17 @@ def main():
         st.markdown("## ⚙️ Settings")
         
         # LLM Enhancement toggle
-        use_llm = st.checkbox(
-            "Enable AI Enhancement (Gemini)",
-            value=False,
-            help="Use Google Gemini AI to improve extraction accuracy"
-        )
+        use_llm = False
+        if GEMINI_AVAILABLE and os.getenv('GEMINI_API_KEY'):
+            use_llm = st.checkbox(
+                "Enable AI Enhancement (Gemini)",
+                value=False,
+                help="Use Google Gemini AI to improve extraction accuracy"
+            )
+        elif GEMINI_AVAILABLE:
+            st.info("💡 Set GEMINI_API_KEY environment variable to enable AI enhancement")
+        else:
+            st.info("💡 Gemini enhanced extractor not available (file not found)")
         
         if use_llm:
             gemini_key = st.text_input(
@@ -213,7 +226,7 @@ def main():
                         progress_bar.progress(20)
                         
                         # Choose extractor based on LLM setting
-                        if use_llm and os.getenv('GEMINI_API_KEY'):
+                        if use_llm and GEMINI_AVAILABLE and os.getenv('GEMINI_API_KEY'):
                             extractor = GeminiEnhancedExtractor(tmp_path, use_llm=True)
                             status.text("🤖 Using AI-enhanced extraction...")
                         else:
@@ -264,7 +277,7 @@ def main():
                             if st.button("🧪 Test with Tata Motors Sample PDF"):
                                 st.info("Testing with sample file...")
                                 with st.spinner("Processing sample..."):
-                                    if use_llm and os.getenv('GEMINI_API_KEY'):
+                                    if use_llm and GEMINI_AVAILABLE and os.getenv('GEMINI_API_KEY'):
                                         sample_extractor = GeminiEnhancedExtractor(
                                             "Tata Motors Quarterly Financial Statements.pdf",
                                             use_llm=True
@@ -341,7 +354,7 @@ def main():
                     st.info("Running test extraction...")
                     with st.spinner("Processing..."):
                         try:
-                            if use_llm and os.getenv('GEMINI_API_KEY'):
+                            if use_llm and GEMINI_AVAILABLE and os.getenv('GEMINI_API_KEY'):
                                 test_extractor = GeminiEnhancedExtractor(
                                     "Tata Motors Quarterly Financial Statements.pdf",
                                     use_llm=True
